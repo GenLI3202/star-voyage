@@ -1,0 +1,5 @@
+{
+  "name": "star-voyage",
+  "owner": { "name": "GenLI3202" },
+  "plugins": [{ "name": "star-voyage", "source": "./" }]
+}

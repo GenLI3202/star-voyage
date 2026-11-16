@@ -1,0 +1,6 @@
+{
+  "name": "star-voyage",
+  "version": "0.7.0",
+  "description": "星空远征：飞往你定下的那一天。星图巡航、打字拉近、发送后星际穿梭、闲置后入港看星河；竖排诗句，并行的对话显示为远征小队",
+  "types": "./types/index.d.ts"
+}
