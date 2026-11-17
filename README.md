@@ -76,6 +76,7 @@ So the skin paints the bottom of the window in that same colour, and the slab va
 - Lamp colours: **green** working (breathing), **blue** waiting for you, **dim blue** idle in harbour, **red** calling you (a question, a plan to approve, a permission request, or a turn that stopped on an error).
 - A squad is named after the conversation's title, or its first line, or its folder.
 - Only conversations you have sent a message in count, and they show for 60 minutes after their last activity.
+- Squads stand in the middle of the margin left of the conversation, as far from the window's edge as from the text. The skin cannot tell whether the left sidebar is open; when it is, it covers them.
 - Conversations talk through one folder on this machine, `~/.claude/star-voyage/fleet/`: one small file each (id, display name, status, last activity). Files untouched for a day are removed. Nothing leaves the machine. `/voyage fleet off` stops a conversation showing others and reporting itself.
 
 ## Changing the poems

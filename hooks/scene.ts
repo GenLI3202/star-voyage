@@ -750,10 +750,9 @@ export function squadName(raw: string, room = 7): string {
 
 /**
  * Where the squads stand, in the order they are listed: down the sky to the
- * left of the conversation, hard by its edge, each a little in or out from
- * the last so they read as scattered and not as a table. A place is the
- * ship's, in a strip `STRIP` wide whose right edge is x = `STRIP`; the name
- * runs leftward from it, with room for a long one.
+ * left of the conversation, each a little in or out from the last so they
+ * read as scattered and not as a table. A place is the ship's, in a strip
+ * `STRIP` wide; the name runs leftward from it, with room for a long one.
  */
 const AFIELD = [
   [178, 112, -150],
@@ -768,11 +767,12 @@ const AFIELD = [
 const SQUAD_ROOM = 12
 
 /**
- * How far the left strip's inner edge stands from the middle of the window,
- * in the window's own pixels: half the conversation's column and a margin.
- * The column is as wide on every screen, so this is not scaled.
+ * The middle of the squads as drawn in their strip, names at full length:
+ * from the far end of the longest name to the ring of the ship furthest out.
+ * It is set on the middle of the margin left of the text, so the squads keep
+ * as far from the conversation as from the window's edge.
  */
-const COLUMN_HALF = 335
+const SQUAD_MID = 88
 
 /**
  * The other sessions, as squads out among the stars: each a small ship in a
@@ -1050,7 +1050,7 @@ function draw(view: View, now: number, o: SceneOptions): string {
   // Four drawings in one: the scene, cut to fill the window from its top; the
   // ground, hung from the window's foot and measured in its pixels; the side
   // column, whole, hung just right of the conversation's text; and the
-  // squads, hung to its left.
+  // squads, in the margin to its left.
   const fill = 'width="100%" height="100%"'
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" ${fill}>${SHEET}${DEFS}` +
@@ -1066,12 +1066,14 @@ function draw(view: View, now: number, o: SceneOptions): string {
     (lab.includes('noside')
       ? ''
       : `<svg x="50%" ${fill} style="overflow:visible"><svg x="${TEXT_HALF + VERSE_GAP}" width="600" height="100%" viewBox="${VERSE_LEFT} 0 ${STRIP} ${H}" preserveAspectRatio="xMinYMin meet" style="overflow:visible">${side}</svg></svg>`) +
-    // The left strip is hung from the middle of the window, a fixed way out:
-    // the conversation's column is centred there, and the sidebar's edge,
-    // which no drawing is told of, is not something to hang from.
+    // The squads stand in the middle of the margin left of the text: halfway
+    // between the window's edge and the text's, which is a quarter of the way
+    // across the window less half the text's half. The conversation is
+    // centred in the window, and the sidebar's edge, which no drawing is told
+    // of, is not something to hang from.
     (squadsDrawn === '' || lab.includes('nosquads')
       ? ''
-      : `<svg x="50%" ${fill} style="overflow:visible"><svg x="${-COLUMN_HALF - 600}" width="600" height="100%" viewBox="0 0 ${STRIP} ${H}" preserveAspectRatio="xMaxYMin meet">${squadsDrawn}</svg></svg>`) +
+      : `<svg x="25%" ${fill} style="overflow:visible"><svg x="${-TEXT_HALF / 2 - 300}" width="600" height="100%" viewBox="${SQUAD_MID - STRIP / 2} 0 ${STRIP} ${H}" preserveAspectRatio="xMidYMin meet" style="overflow:visible">${squadsDrawn}</svg></svg>`) +
     `</svg>`
   )
 }

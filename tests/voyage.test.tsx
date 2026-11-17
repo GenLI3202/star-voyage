@@ -816,11 +816,31 @@ test('the squads stand in the sky left of the conversation, each with its name a
     // They are in the strip hung left of the conversation, never in the scene
     // and never among the words to its right.
     const [main = '', rest = ''] = svg.split('preserveAspectRatio="xMinYMin meet"')
-    const [right = '', left = ''] = rest.split('preserveAspectRatio="xMaxYMin meet"')
+    const [right = '', left = ''] = rest.split('preserveAspectRatio="xMidYMin meet"')
     expect(main).not.toContain('class="sq"')
     expect(right).not.toContain('class="sq"')
     expect(left.match(/class="sq"/g)?.length).toBe(3)
   }
+})
+
+test('the squads stand in the middle of the margin left of the text, as far from it as from the window edge', () => {
+  const squads: Squad[] = Array.from({ length: 6 }, (_, i) => ({ name: `第${i}队一个相当长的对话标题用来占满`, status: 'wait' }))
+  const svg = scene({ ...REST, at: NOW - 60_000, fleet: squads }, NOW, { voyage: VOYAGE, poems: POEMS, motion: 'low' })
+  // The margin runs from the window's edge to the text's, 400 left of the
+  // middle: its middle is a quarter of the way across, less 200.
+  const hung = /<svg x="25%" width="100%" height="100%" style="overflow:visible"><svg x="(-?\d+)" width="(\d+)" height="100%" viewBox="(-?[\d.]+) 0 200 900" preserveAspectRatio="xMidYMin meet"/.exec(svg)
+  expect(hung, 'the squads hang from the margin').not.toBeNull()
+  const [, x = '0', width = '0', from = '0'] = hung ?? []
+  expect(Number(x) + Number(width) / 2).toBe(-200)
+  // What is set on that line is the squads' own middle: from the far end of a
+  // name at full length to the ring of the ship furthest out.
+  const left = svg.slice(svg.indexOf(hung?.[0] ?? ''))
+  const ships = [...left.matchAll(/translate\((\d+) \d+\)"><circle class="sq"/g)].map(m => Number(m[1]))
+  expect(ships.length).toBe(6)
+  // A full name: twelve characters and the mark of a cut, 11px with spacing.
+  const name = 13 * 11 * 1.08
+  const block = { from: Math.min(...ships) - 20 - name, to: Math.max(...ships) + 13 }
+  expect(Math.abs(Number(from) + 100 - (block.from + block.to) / 2)).toBeLessThan(8)
 })
 
 test('the side column stands hard by the text: the poem nearest it, its source right under it', () => {
