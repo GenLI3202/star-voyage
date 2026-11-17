@@ -95,6 +95,12 @@ type Row = {
  */
 const GROUND = 120
 const GROUND_MOST = 700
+/**
+ * How far `/voyage side` moves the side column, in the strip's units. It
+ * stands hard by the text already: a little way in, and a long way out.
+ */
+const SIDE_LEAST = -10
+const SIDE_MOST = 200
 /** Under way, the first poem comes once the jump has settled, and a new one each minute after. */
 const VERSE_FIRST_MS = 3000
 const VERSE_EVERY_MS = 60_000
@@ -970,7 +976,9 @@ async function loadSettings($: EngineInterface): Promise<void> {
   ship.ground = Number.isFinite(ground) && ground >= 0 && ground <= GROUND_MOST ? Math.round(ground) : GROUND
   const side = Number(await $.store.get('side'))
 
-  if (Number.isFinite(side) && side >= -200 && side <= 60) {
+  // The column used to stand in the margin's middle, and an offset kept from
+  // then could carry it into the text: one outside today's range is let go.
+  if (Number.isFinite(side) && side >= SIDE_LEAST && side <= SIDE_MOST) {
     ship.side = side
   }
   ship.hasFleet = (await $.store.get('fleet')) !== false
@@ -1492,8 +1500,8 @@ export const register: Register = on => {
     if (word === 'side') {
       const x = Number(value)
 
-      if (value === '' || !(x >= -200 && x <= 60)) {
-        return { text: `用法：/voyage side <偏移>，-200 到 60，负数往对话那边挪，正数往窗口右边缘挪；现在是 ${ship.side}，默认 0。诗句、穿梭时的进度轴和小队都排在这一列，这一列居中在正文和窗口右边缘之间。` }
+      if (value === '' || !(x >= SIDE_LEAST && x <= SIDE_MOST)) {
+        return { text: `用法：/voyage side <偏移>，${SIDE_LEAST} 到 ${SIDE_MOST}，负数往正文那边挪，正数往窗口右边缘挪；现在是 ${ship.side}，默认 0。诗句和穿梭时的进度轴排在这一列，这一列紧贴在正文右边。` }
       }
       ship.side = x
       await keep($, 'side', x)

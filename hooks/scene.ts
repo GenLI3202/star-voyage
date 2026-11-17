@@ -101,26 +101,26 @@ const SQUASH = 0.39
 const SUN = { x: 560, y: 590 }
 /**
  * The side column is a drawing of its own, `STRIP` wide and as tall as the
- * scene, set in the middle of the margin between the conversation's text and
- * the window's right edge, whatever the window's shape. A column placed in
- * the scene itself slides under the text as the window gets shorter, and one
- * held against the window's edge is a long look away on a wide screen. `SIDE`
- * is the column's centre line within the strip.
+ * scene, hung just right of the conversation's text, whatever the window's
+ * shape. A column placed in the scene itself slides under the text as the
+ * window gets shorter, and one set further out, in the margin's middle or
+ * against the window's edge, is what a panel opened on the right covers
+ * first. `SIDE` is the column's centre line within the strip.
  */
 const STRIP = 200
 const SIDE = 112
-/** The strip's own middle: what stands in it runs from about x = 35 to x = 197. */
-const STRIP_MID = 116
+/** Where the strip's drawing begins: the poem's left edge, the part nearest the text. */
+const VERSE_LEFT = 46
 /**
- * Where that margin's middle lies, in the window's own pixels, right of the
- * three-quarter line of the window. The conversation's column is centred in
- * the window and as wide on every screen, so the margin runs from half its
- * width right of the middle to the edge; its own middle is half of that
- * again past the three-quarter line. An open sidebar pushes the column, and
- * the margin's middle, a little further right than this allows for: the
- * drawing is not told of the sidebar.
+ * How far the strip's left edge stands right of the window's middle, in the
+ * window's own pixels: half the conversation's text column, about 800 wide
+ * (measured on a 2560-wide window), and a gap. The column is as wide on every
+ * screen that has room for it, so this is not scaled. A panel opened beside
+ * the conversation moves the column, and no drawing is told: here, hard by the
+ * text, the side column is the last thing a panel on the right reaches.
  */
-const MARGIN_MID = 170
+const TEXT_HALF = 400
+const VERSE_GAP = 24
 /**
  * The side column from the top: the poem, and to its right a lane for the
  * voyage line of a jump, the progress line or the harbour's greeting. All of
@@ -129,8 +129,6 @@ const MARGIN_MID = 170
 const VERSE_TOP = 120
 const VERSE_ROOM = 344
 const LANE_TOP = VERSE_TOP + 22
-/** Where the verse's first column stands: hard by the conversation, leaving the strip's outer edge free. */
-const VERSE_RIGHT = SIDE + 8
 /** The voyage line of a jump runs down the strip's outer edge, beside the verse. */
 const GAUGE_X = SIDE + 70
 /** The lane the small words stand in, at rest and in harbour: where the voyage line runs during a jump. */
@@ -139,6 +137,8 @@ const LANE_X = SIDE + 74
 const HOLD = 9
 /** How much lower each column of a poem begins than the one before it, in cells. */
 const STAGGER = 0.6
+/** How far under the poem's lowest glyph its source begins. */
+const SOURCE_GAP = 10
 const HOLD_UNDER_WAY = 52
 /** How long the streaks of a jump play before a calm scene holds them still, in seconds. */
 const JUMP_PLAYS = 15
@@ -583,7 +583,9 @@ function verseCount(poem: Poem): number {
 /**
  * A poem set the old way: brushed columns read from the right, each glyph
  * coming in on its own and drifting off on the wind, and its source in small
- * type to their left, a little lower, as a signature stands.
+ * type beneath them. The poem's left edge is held at `VERSE_LEFT`, nearest
+ * the conversation, so a short poem stands as close to the text as a long one
+ * and nothing of it reaches further in.
  */
 function verse(poem: Poem, since: number, seed: number, holdFor: number): string {
   const [line, source] = poem
@@ -595,24 +597,27 @@ function verse(poem: Poem, since: number, seed: number, holdFor: number): string
   const size = Math.min(cols.length >= 3 ? 24 : 27, Math.floor(VERSE_ROOM / ((tallest + steps) * 1.14)))
   const cell = size * 1.14
   const pitch = size * 1.3
-  const right = VERSE_RIGHT
+  const wide = (cols.length - 1) * pitch + size
   const r = rng(seed)
   let index = 0
   let out = ''
+  let bottom = VERSE_TOP
   cols.forEach((col, c) => {
-    const cx = right - c * pitch
+    const cx = VERSE_LEFT + wide - size / 2 - c * pitch
     const top = VERSE_TOP + c * STAGGER * cell
+    bottom = Math.max(bottom, top + (col.length - 1) * cell + size)
     col.forEach((g, i) => {
       if (g === ' ') return
       out += `<g class="gl" style="${drift(r, index, since, holdFor)}">${brushed(g, cx - size / 2, size, top + i * cell + size * 0.86, size)}</g>`
       index += 1
     })
   })
-  // The source, small, lower again, as a signature stands. In a column, a
-  // title's marks turn to their upright forms.
+  // The source, small, in a column of its own under the middle of the poem,
+  // below its lowest glyph. In a column, a title's marks turn to their
+  // upright forms.
   const signed = [...source.replace(/《/g, '︽').replace(/》/g, '︾')]
-  const sx = right - cols.length * pitch + 7
-  let sy = VERSE_TOP + (steps + STAGGER + 0.6) * cell
+  const sx = VERSE_LEFT + wide / 2
+  let sy = bottom + SOURCE_GAP
   const q = rng(9)
   signed.forEach((g, i) => {
     if (g === ' ') {
@@ -1044,8 +1049,8 @@ function draw(view: View, now: number, o: SceneOptions): string {
   }
   // Four drawings in one: the scene, cut to fill the window from its top; the
   // ground, hung from the window's foot and measured in its pixels; the side
-  // column, whole, in the margin to the conversation's right; and the squads,
-  // hung to its left.
+  // column, whole, hung just right of the conversation's text; and the
+  // squads, hung to its left.
   const fill = 'width="100%" height="100%"'
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" ${fill}>${SHEET}${DEFS}` +
@@ -1053,11 +1058,14 @@ function draw(view: View, now: number, o: SceneOptions): string {
     // A drawing with no viewBox of its own, set down at the foot of the
     // window: one unit in it is one pixel, and what it draws stands above it.
     (foot === '' ? '' : `<svg y="100%" ${fill} style="overflow:visible">${foot}</svg>`) +
-    // The right half of the window, and in it the strip, its middle set on
-    // the margin's middle.
+    // The strip is hung from the middle of the window, its left edge a fixed
+    // way out past the text: the poem nearest the conversation, the rest
+    // running out toward the window's edge. Its edge is where the poem
+    // begins, so it does not cut: a stroke past its cell, or the column moved
+    // in by `side`, still shows.
     (lab.includes('noside')
       ? ''
-      : `<svg x="50%" width="50%" height="100%"><g transform="translate(${MARGIN_MID} 0)"><svg ${fill} viewBox="${STRIP_MID - STRIP / 2} 0 ${STRIP} ${H}" preserveAspectRatio="xMidYMin meet">${side}</svg></g></svg>`) +
+      : `<svg x="50%" ${fill} style="overflow:visible"><svg x="${TEXT_HALF + VERSE_GAP}" width="600" height="100%" viewBox="${VERSE_LEFT} 0 ${STRIP} ${H}" preserveAspectRatio="xMinYMin meet" style="overflow:visible">${side}</svg></svg>`) +
     // The left strip is hung from the middle of the window, a fixed way out:
     // the conversation's column is centred there, and the sidebar's edge,
     // which no drawing is told of, is not something to hang from.

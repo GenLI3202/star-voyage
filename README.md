@@ -60,7 +60,7 @@ Dates are `YYYY-MM-DD`. The destination name takes up to 6 characters; up to 8 h
 - `/voyage motion low|full|calm|still` — animation. `calm` (default) moves only while something happens; `low` redraws a few times a second; `full` is smooth; `still` never moves.
 - `/voyage ground <px>` — how much of the window's foot is given to the message box; see *The ground*. Default 120.
 - `/voyage glass off` (default) or `/voyage glass <blur 0–64> <opacity 0–1>` — the app's glass panels. `/voyage veil <0–0.8>` sets the scene's own veil.
-- `/voyage side <offset>` — move the side column left or right (−200 to 60).
+- `/voyage side <offset>` — move the side column, which stands just right of the conversation's text, further out (up to 200) or a little in (down to −10). With the left sidebar open the text moves right and can run under the poem: `/voyage side 90` clears it.
 - `/voyage fleet on|off` — squads; `/voyage warm <minutes>` — how long after its last activity a conversation still shows as a squad.
 - `/voyage cool <minutes>` — idle time before harbour; `/voyage sound on|off`.
 - `/voyage off` / `/voyage on`.

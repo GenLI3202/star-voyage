@@ -815,11 +815,45 @@ test('the squads stand in the sky left of the conversation, each with its name a
     expect(svg).toContain('甲队 一个相当长的对话标…')
     // They are in the strip hung left of the conversation, never in the scene
     // and never among the words to its right.
-    const [main = '', rest = ''] = svg.split('preserveAspectRatio="xMidYMin meet"')
+    const [main = '', rest = ''] = svg.split('preserveAspectRatio="xMinYMin meet"')
     const [right = '', left = ''] = rest.split('preserveAspectRatio="xMaxYMin meet"')
     expect(main).not.toContain('class="sq"')
     expect(right).not.toContain('class="sq"')
     expect(left.match(/class="sq"/g)?.length).toBe(3)
+  }
+})
+
+test('the side column stands hard by the text: the poem nearest it, its source right under it', () => {
+  for (const poem of EVERY_POEM) {
+    const view: View = { ...REST, at: NOW - 60_000, poem, poemAt: NOW - 3000, fleet: [] }
+    const svg = scene(view, NOW, { voyage: VOYAGE, poems: POEMS, motion: 'low' })
+    // The strip hangs from the window's middle, its drawing beginning past
+    // half the text column, so a panel on the right reaches it last.
+    const strip = /<svg x="(\d+)" width="600" height="100%" viewBox="(\d+) 0 200 900" preserveAspectRatio="xMinYMin meet" style="overflow:visible">/.exec(svg)
+    expect(strip, `poem ${poem}`).not.toBeNull()
+    const [, hungAt = '0', begins = '0'] = strip ?? []
+    expect(Number(hungAt), `poem ${poem}`).toBeGreaterThanOrEqual(400)
+    // The chart has brushed words of its own: only the strip's are the poem's.
+    const inStrip = svg.slice((strip?.index ?? 0) + (strip?.[0].length ?? 0))
+    const inks = [...inStrip.matchAll(/class="ink" transform="translate\(([\d.-]+) ([\d.-]+)\) scale\(([\d.]+)\)"/g)].map(m => ({ x: Number(m[1]), y: Number(m[2]) }))
+    expect(inks.length, `poem ${poem}`).toBeGreaterThan(0)
+    const left = Math.min(...inks.map(g => g.x))
+    const right = Math.max(...inks.map(g => g.x))
+    const lowest = Math.max(...inks.map(g => g.y))
+    // Every poem, short or long, begins at the strip's own edge.
+    expect(left, `poem ${poem}`).toBeGreaterThanOrEqual(Number(begins) - 2)
+    expect(left, `poem ${poem}`).toBeLessThanOrEqual(Number(begins) + 4)
+    // The source is one column under the poem: inside its width, below its last glyph.
+    const signed = [...inStrip.matchAll(/class="gl small" x="([\d.]+)" y="([\d.]+)"/g)].map(m => ({ x: Number(m[1]), y: Number(m[2]) }))
+    expect(signed.length, `poem ${poem}`).toBeGreaterThan(0)
+    expect(new Set(signed.map(g => g.x)).size, `poem ${poem}`).toBe(1)
+    for (const g of signed) {
+      expect(g.x, `poem ${poem}`).toBeGreaterThan(left)
+      expect(g.x, `poem ${poem}`).toBeLessThan(right + 27)
+      expect(g.y, `poem ${poem}`).toBeGreaterThan(lowest)
+      // And still well above the foot of the shortest window's strip.
+      expect(g.y, `poem ${poem}`).toBeLessThan(720)
+    }
   }
 })
 
@@ -883,7 +917,7 @@ test('the lab takes the scene apart without breaking it', () => {
       expect(refusals(svg), `${name} ${lab.join()}`).toEqual([])
       if (lab.includes('nostars')) expect(svg, name).not.toContain('class="star"')
       if (lab.includes('noglow')) expect(svg, name).not.toMatch(/fill="url\(#g/)
-      if (lab.includes('noside')) expect(svg, name).not.toContain('xMidYMin meet')
+      if (lab.includes('noside')) expect(svg, name).not.toContain('xMinYMin meet')
       if (lab.includes('nosquads')) expect(svg, name).not.toContain('class="sq"')
       if (lab.includes('flat')) expect(svg.match(/<svg/g)?.length, name).toBe(1)
     }
