@@ -121,6 +121,12 @@ const STANCE: Record<SquadStatus, string> = { work: '探索中', wait: '待命',
 /** How much of a name a row carries: more than any drawing shows, so the drawing decides. */
 const NAME_ROOM = 16
 const ROW_FILE = /^[0-9a-zA-Z-]{8,64}\.json$/
+/**
+ * A side question asked with btw: the app forks it off a conversation and
+ * titles it "btw: …", which a row carries as "btw …". It is an aside to a
+ * squad already on show, not a squad of its own.
+ */
+const ASIDE = /^\s*btw\b/i
 
 // Change the tag when a field of View changes: it declines what an earlier
 // version stored, which outlives a reload.
@@ -613,7 +619,7 @@ async function muster($: EngineInterface): Promise<Squad[] | undefined> {
 
       const row = known.row
 
-      if (row.status === 'gone') {
+      if (row.status === 'gone' || ASIDE.test(row.name)) {
         continue
       }
       // On show for as long as its cache is warm, heard from or not, and no

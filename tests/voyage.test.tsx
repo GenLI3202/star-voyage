@@ -485,6 +485,11 @@ test('a session tells the others how it stands, and shows them as squads', async
   // And one not heard from for ten minutes, in the middle of a turn, whose
   // cache holds for an hour: still on show, as waiting.
   fleet.put('eeeeeeee-0000-4000-8000-000000000005', { name: '还热着的对话', status: 'work', at: NOW - 10 * 60_000, active: NOW - 10 * 60_000 })
+  // Side questions asked with btw, warm and waiting: asides to a squad, not
+  // squads. A title that only begins with the letters is a squad all the same.
+  fleet.put('12121212-0000-4000-8000-000000000012', { name: 'btw 用 asd-ste100 给我讲一下现…', status: 'wait' })
+  fleet.put('13131313-0000-4000-8000-000000000013', { name: 'BTW: 旁边问一句', status: 'work' })
+  fleet.put('14141414-0000-4000-8000-000000000014', { name: 'btwin 孪生模型', status: 'wait' })
 
   const drawn = async (): Promise<string> => {
     const ui = await $.ui.mount(BACKDROP)
@@ -508,6 +513,9 @@ test('a session tells the others how it stands, and shows them as squads', async
   expect(chart).not.toContain('出错后没人管')
   expect(chart).toContain('还热着的对话')
   expect(chart).toContain('待命')
+  expect(chart).not.toContain('asd-ste100')
+  expect(chart).not.toContain('旁边问一句')
+  expect(chart).toContain('btwin 孪生模型')
   // A minute of standing open changes nothing.
   await clock.advance(60_000)
   expect(fleet.mine()).toEqual({})
